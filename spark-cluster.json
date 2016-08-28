@@ -1,0 +1,143 @@
+{
+    "jpsType": "install",
+    "jpsVersion": "0.7",
+    "application": {
+        "name": "Apache Spark Cluster",
+        "version": "1.0.0",
+        "env": {
+            "topology": {
+                "nodes": [{
+                    "nodeType": "docker",
+                    "extip": false,
+                    "displayName": "master",
+                    "nodeGroup": "master",
+                    "cloudlets": 32,
+                    "docker": {
+                        "image": "andretadeu/apache-spark",
+                        "volumes": [
+                            "/inputs",
+                            "/outputs"
+                        ],
+                        "volumeMounts": {
+                            "/inputs": {
+                                "readOnly": false,
+                                "sourcePath": "/data/inputs",
+                                "sourceNodeGroup": "storage"
+                            },
+                            "/outputs": {
+                                "readOnly": false,
+                                "sourcePath": "/data/outputs",
+                                "sourceNodeGroup": "storage"
+                            }
+                        },
+                        "env": {
+                            "MASTER": "true"
+                        },
+                        "registry": {
+                            "url": "registry.hub.docker.com"
+                        }
+                    }
+                },
+                {
+                    "nodeType": "docker",
+                    "extip": false,
+                    "displayName": "slave",
+                    "nodeGroup": "slave",
+                    "cloudlets": 32,
+                    "count": 2,
+                    "docker": {
+                        "image": "andretadeu/apache-spark",
+                        "volumes": [
+                            "/inputs",
+                            "/outputs"
+                        ],
+                        "volumeMounts": {
+                            "/inputs": {
+                                "readOnly": false,
+                                "sourcePath": "/data/inputs",
+                                "sourceNodeGroup": "storage"
+                            },
+                            "/outputs": {
+                                "readOnly": false,
+                                "sourcePath": "/data/outputs",
+                                "sourceNodeGroup": "storage"
+                            }
+                        },
+                        "links": ["master:master"],
+                        "registry": {
+                            "url": "registry.hub.docker.com"
+                        }
+                    }
+                }, {
+                    "nodeType": "docker",
+                    "extip": true,
+                    "displayName": "Storage",
+                    "cloudlets": 8,
+                    "nodeGroup": "storage",
+                    "docker": {
+                        "image": "jelastic/storage",
+                        "registry": {
+                            "url": "registry.hub.docker.com"
+                        }
+                    }
+                }]
+            }
+        },
+        "onInstall": [{
+            "call": [{
+                "procedure": "setStartupOrder",
+                "params": {
+                    "displayName": "storage"
+                }
+            }, {
+                "procedure": "setStartupOrder",
+                "params": {
+                    "displayName": "master"
+                }
+            }, {
+                "procedure": "setStartupOrder",
+                "params": {
+                    "displayName": "slave"
+                }
+            }, {
+                "procedure": "copyDatasource"
+            }, {
+                "procedure": "downloadAndRunWordCount"
+            }]
+        }],
+        "procedures": [{
+            "id": "setStartupOrder",
+            "onCall": [{
+                "executeScript": {
+                    "type": "javascript",
+                    "script": "http://owncloud.demo.jelastic.com/public.php?service=files&t=478044425bddca6cd4a9e8ca484e7341&download"
+                }
+            }]
+        },
+        {
+            "id": "copyDatasource",
+            "onCall": [{
+                "forEach(nodes.storage)": [{
+                    "execCmd": [{
+                        "nodeGroup": "storage",
+                        "commands": [
+                            "cd /data/inputs && wget https://github.com/andretadeu/spark-wordcount/raw/master/src/main/resources/shakespeare.txt"
+                        ]
+                    }]
+                }]
+            }]
+        }, {
+            "id": "downloadAndRunWordCount",
+            "onCall": [{
+                "forEach(nodes.master)": [{
+                    "execCmd": [{
+                        "nodeGroup": "master",
+                        "commands": [
+                            "cd /jobs && wget https://s3-us-west-1.amazonaws.com/andre-jelastic/spark-wordcount-assembly-1.0.jar"
+                        ]
+                    }]
+                }]
+            }]
+        }]
+    }
+}
