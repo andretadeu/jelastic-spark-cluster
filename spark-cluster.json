@@ -102,7 +102,7 @@
             }, {
                 "procedure": "copyDatasource"
             }, {
-                "procedure": "downloadAndRunWordCount"
+                "procedure": "downloadWordCount"
             }]
         }],
         "procedures": [{
@@ -127,7 +127,7 @@
                 }]
             }]
         }, {
-            "id": "downloadAndRunWordCount",
+            "id": "downloadWordCount",
             "onCall": [{
                 "forEach(nodes.master)": [{
                     "execCmd": [{
