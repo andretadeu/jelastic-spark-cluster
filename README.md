@@ -26,8 +26,8 @@ ssh -p 3022 9999@gate.demo.jelastic.com
 ```
 
 After that, access the container named **master**. Inside the **master**
- container, access the **job** folder and run the following command:
+ container, run the following command:
 
 ```{bash}
-/opt/spark-2.0.0-bin-hadoop2.7/bin/spark-submit --class WordCount --master spark://$HOSTNAME:7077 spark-wordcount-assembly-1.0.jar /inputs /outputs
+/opt/spark-2.0.0-bin-hadoop2.7/bin/spark-submit --class WordCount --master spark://$HOSTNAME:7077 /jobs/spark-wordcount-assembly-1.0.jar /inputs /outputs
 ```
